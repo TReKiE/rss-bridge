@@ -43,7 +43,7 @@ class ComicsKingdomBridge extends BridgeAbstract
             $item['author'] = str_ireplace('By ', '', $comicitem->ck_comic_byline);
             $item['title'] = $comicitem->yoast_head_json->title;
             $item['timestamp'] = $comicitem->date;
-            $item['content'] = '<img src="' . $comicitem->yoast_head_json->og_image[0]->url . '" />';
+            $item['content'] = '<img src="' . $comicitem->assets->single->url . '" />';
             $this->items[] = $item;
         }
     }
