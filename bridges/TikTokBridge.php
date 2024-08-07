@@ -22,7 +22,7 @@ class TikTokBridge extends BridgeAbstract
         ]
     ];
 
-    const CACHE_TIMEOUT = 900; // 15 minutes
+    const CACHE_TIMEOUT = 1; // 15 minutes
 
     public function collectData()
     {
@@ -43,9 +43,33 @@ class TikTokBridge extends BridgeAbstract
 
             $image = $video->find('video', 0)->poster;
             $views = $video->find('div[data-e2e=common-Video-Count]', 0)->plaintext;
+            $videoSrc = $video->find('video', 0)->src;
+            $videoSrc = html_entity_decode($videoSrc);
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $videoSrc);
+            curl_setopt($ch, CURLOPT_NOBODY, true); // Only fetch the headers
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HEADER, true); // Include the headers in the output
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Referer: https://www.tiktok.com/'
+            ]);
+        
+        
+        
+            $response = curl_exec($ch);
+            curl_close($ch);
+        
+            // Extract the Last-Modified header
+            $lastModified = '';
+            if (preg_match('/Last-Modified: (.*)\r/', $response, $matches)) {
+                $lastModified = $matches[1];
+                $item['timestamp'] = $lastModified;
+            }
+
 
             $enclosures = [$image];
-
+            $videoEnc = urlencode($videoSrc);
             $item['uri'] = $url;
             $item['title'] = 'Video';
             $item['author'] = '@' . $author;
@@ -53,6 +77,8 @@ class TikTokBridge extends BridgeAbstract
             $item['content'] = <<<EOD
 <a href="{$url}"><img src="{$image}"/></a>
 <p>{$views} views<p><br/>
+<video src="https://proxitok.belloworld.it/stream?url={$videoEnc}" controls></video>
+<p>Last Modified: {$lastModified}</p>
 EOD;
 
             $this->items[] = $item;
