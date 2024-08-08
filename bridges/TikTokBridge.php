@@ -46,19 +46,14 @@ class TikTokBridge extends BridgeAbstract
             $videoSrc = $video->find('video', 0)->src;
             $videoSrc = html_entity_decode($videoSrc);
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $videoSrc);
-            curl_setopt($ch, CURLOPT_NOBODY, true); // Only fetch the headers
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HEADER, true); // Include the headers in the output
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Referer: https://www.tiktok.com/'
-            ]);
-        
-        
-        
-            $response = curl_exec($ch);
-            curl_close($ch);
+            $header = array('Referer: https://www.tiktok.com/');
+            $opts = array(
+                CURLOPT_NOBODY => true, // Only fetch the headers
+                CURLOPT_HEADER => true,  // Include the headers in the output
+                CURLOPT_MAXFILESIZE_LARGE => 10000000000
+            );
+
+            $response = getContents($videoSrc, $header, $opts);
         
             // Extract the Last-Modified header
             $lastModified = '';
