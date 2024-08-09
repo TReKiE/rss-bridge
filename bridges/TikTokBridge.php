@@ -50,7 +50,8 @@ class TikTokBridge extends BridgeAbstract
             $opts = array(
                 CURLOPT_NOBODY => true, // Only fetch the headers
                 CURLOPT_HEADER => true,  // Include the headers in the output
-                CURLOPT_MAXFILESIZE_LARGE => 10000000000
+                CURLOPT_MAXFILESIZE_LARGE => 10000000000,
+                CURLOPT_RANGE => '0-1'
             );
 
             $response = getContents($videoSrc, $header, $opts);
