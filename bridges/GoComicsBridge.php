@@ -32,8 +32,18 @@ class GoComicsBridge extends BridgeAbstract
     {
         $link = $this->getURI();
         $landingpage = getSimpleHTMLDOM($link);
-
-        $link = $landingpage->find('div[data-post-url]', 0)->getAttribute('data-post-url');
+        $element = $landingpage->find('div[data-post-url]', 0);
+        if ($element) {
+            $link = $element->getAttribute('data-post-url');
+        } else { // fallback for the odd comic where this attribute doesn't exist
+            $headers = get_headers($link, 1);
+            if (isset($headers['Date'])) {
+                $date = (new DateTime($headers['Date']))->format('F j, Y');
+                $link = $this->getURI() . '/' . DateTime::createFromFormat('F j, Y', $date)->format('Y/m/d');
+            } else {
+                throw new \Exception('Could not find the first comic URL. Please create a new GitHub issue.');
+            }
+        }
 
         for ($i = 0; $i < $this->getInput('limit'); $i++) {
             $html = getSimpleHTMLDOM($link);
