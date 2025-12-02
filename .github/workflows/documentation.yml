@@ -4,12 +4,21 @@ on:
   push:
     paths:
     - 'docs/**'
+  pull_request:
+    branches:
+      - 'master'
+    paths:
+      - .github/workflows/**
+      - 'docs/**'
+
+permissions:
+  contents: write
 
 jobs:
   documentation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         persist-credentials: false
     - name: Setup PHP
@@ -21,6 +30,7 @@ jobs:
     - name: Generate documentation
       run: daux generate
     - name: Deploy same repository 🚀
+      if: ${{ github.event_name != 'pull_request' }}
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: "static"

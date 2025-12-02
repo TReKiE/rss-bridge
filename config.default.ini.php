@@ -6,6 +6,9 @@
 
 [system]
 
+; System environment: "dev" or "prod"
+env = "prod"
+
 ; Only these bridges are available for feed production
 ; How to enable all bridges: enabled_bridges[] = *
 ;enabled_bridges[] = CssSelectorBridge
@@ -30,13 +33,6 @@ timezone = "UTC"
 
 ; Display a system message to users.
 ;message = "Hello world"
-
-; Whether to enable debug mode.
-enable_debug_mode = false
-
-; Enable debug mode only for these permitted ip addresses
-; debug_mode_whitelist[] = 127.0.0.1
-; debug_mode_whitelist[] = 192.168.1.10
 
 ; Whether to enable maintenance mode. If enabled, feed requests receive 503 Service Unavailable
 enable_maintenance_mode = false
@@ -70,6 +66,12 @@ type = "file"
 ; true  = enabled
 ; false = disabled (default)
 custom_timeout = false
+
+[logging]
+
+;file_path = "/var/log/rss-bridge.log"
+; DEBUG, INFO, WARNING or ERROR
+;file_level = "INFO"
 
 [admin]
 

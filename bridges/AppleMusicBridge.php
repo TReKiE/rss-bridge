@@ -66,12 +66,12 @@ class AppleMusicBridge extends BridgeAbstract
         }
 
         $url = 'https://itunes.apple.com/lookup?id=' . $this->getInput('artist') . '&entity=album&limit=' . $limit . '&sort=recent';
-        $html = getSimpleHTMLDOM($url);
+        $html = getContents($url);
         $json = json_decode($html);
         $result = $json->results;
 
         if (!is_array($result) || count($result) == 0) {
-            returnServerError('There is no artist with id "' . $this->getInput('artist') . '".');
+            throwServerException('There is no artist with id "' . $this->getInput('artist') . '".');
         }
 
         return $result;

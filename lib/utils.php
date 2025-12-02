@@ -242,12 +242,40 @@ function create_random_string(int $bytes = 16): string
     return bin2hex(openssl_random_pseudo_bytes($bytes));
 }
 
-function returnClientError($message)
+/**
+ * Thrown by bridges to indicate user failure. Will not be logged.
+ */
+final class ClientException extends \Exception
 {
-    throw new \Exception($message, 400);
 }
 
-function returnServerError($message)
+function throwClientException(string $message = '')
+{
+    throw new ClientException($message, 400);
+}
+
+function throwServerException(string $message = '')
 {
     throw new \Exception($message, 500);
+}
+
+function throwRateLimitException(string $message = '')
+{
+    throw new RateLimitException($message);
+}
+
+/**
+ * @deprecated Use throwClientException() instead
+ */
+function returnClientError(string $message = '')
+{
+    throw new \Exception($message);
+}
+
+/**
+ * @deprecated Use throwServerException() instead
+ */
+function returnServerError(string $message = '')
+{
+    throw new \Exception($message);
 }

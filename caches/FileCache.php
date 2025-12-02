@@ -45,11 +45,15 @@ class FileCache implements CacheInterface
         return $default;
     }
 
-    public function set($key, $value, int $ttl = null): void
+    public function set($key, $value, ?int $ttl = null): void
     {
+        if ($ttl === 0) {
+            return; // ttl is 0, do nothing
+        }
+
         $item = [
             'key'           => $key,
-            'expiration'    => $ttl === null ? 0 : time() + $ttl,
+            'expiration'    => $ttl === null ? 0 : time() + $ttl, // if ttl not provided, store forever
             'value'         => $value,
         ];
         $cacheFile = $this->createCacheFile($key);

@@ -47,16 +47,19 @@ $container['cache_factory'] = function ($c) {
 
 $container['logger'] = function () {
     $logger = new SimpleLogger('rssbridge');
-    if (Debug::isEnabled()) {
+    if (Configuration::getConfig('system', 'env') === 'dev') {
         $logger->addHandler(new ErrorLogHandler(Logger::DEBUG));
     } else {
         $logger->addHandler(new ErrorLogHandler(Logger::INFO));
     }
-    // Uncomment this for info logging to fs
-    // $logger->addHandler(new StreamHandler('/tmp/rss-bridge.txt', Logger::INFO));
 
-    // Uncomment this for debug logging to fs
-    // $logger->addHandler(new StreamHandler('/tmp/rss-bridge-debug.txt', Logger::DEBUG));
+    $file_path  = Configuration::getConfig('logging', 'file_path');
+    $file_level = Configuration::getConfig('logging', 'file_level');
+    if ($file_path && $file_level) {
+        $level = array_flip(Logger::LEVEL_NAMES)[strtoupper($file_level)];
+        $logger->addHandler(new StreamHandler($file_path, $level));
+    }
+
     return $logger;
 };
 

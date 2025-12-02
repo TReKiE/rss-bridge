@@ -46,7 +46,7 @@ Requires minimum PHP 7.4.
 * `TwitchBridge`: [Fetches videos from channel](https://rss-bridge.org/bridge01/#bridge-TwitchBridge)
 * `XPathBridge`: [Scrape out a feed using XPath expressions](https://rss-bridge.org/bridge01/#bridge-XPathBridge)
 * `YoutubeBridge`: [Fetches videos by username/channel/playlist/search](https://rss-bridge.org/bridge01/#bridge-YoutubeBridge)
-* `YouTubeCommunityTabBridge`: [Fetches posts from a channel's community tab](https://rss-bridge.org/bridge01/#bridge-YouTubeCommunityTabBridge)
+* `YouTubeCommunityTabBridge`: [Fetches posts from a channel's Posts tab](https://rss-bridge.org/bridge01/#bridge-YouTubeCommunityTabBridge)
 
 ## Tutorial
 
@@ -321,12 +321,22 @@ The sqlite files (db, wal and shm) are not writeable.
 
     rm cache/*
 
-### How to create a new bridge from scratch
+### How to create a completely new bridge
+
+New code files MUST have `declare(strict_types=1);` at the top of file:
+
+```php
+<?php
+
+declare(strict_types=1);
+```
 
 Create the new bridge in e.g. `bridges/BearBlogBridge.php`:
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 class BearBlogBridge extends BridgeAbstract
 {
@@ -358,14 +368,6 @@ Learn more in [bridge api](https://rss-bridge.github.io/rss-bridge/Bridge_API/in
 enabled_bridges[] = TwitchBridge
 enabled_bridges[] = GettrBridge
 ```
-
-### How to enable debug mode
-
-The 
-[debug mode](https://rss-bridge.github.io/rss-bridge/For_Developers/Debug_mode.html)
-disables the majority of caching operations.
-
-    enable_debug_mode = true
 
 ### How to switch to memcached as cache backend
 
@@ -447,6 +449,7 @@ https://github.com/squizlabs/PHP_CodeSniffer/wiki
     php -S 127.0.0.1:9001
 
 http://127.0.0.1:9001/
+
 
 ## Explanation
 

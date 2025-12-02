@@ -66,10 +66,10 @@ class AssociatedPressNewsBridge extends BridgeAbstract
     {
         switch ($this->getInput('topic')) {
             case 'Podcasts':
-                returnClientError('Podcasts topic feed is not supported');
+                throwClientException('Podcasts topic feed is not supported');
                 break;
             case 'PressReleases':
-                returnClientError('PressReleases topic feed is not supported');
+                throwClientException('PressReleases topic feed is not supported');
                 break;
             default:
                 $this->collectCardData();
@@ -110,7 +110,7 @@ class AssociatedPressNewsBridge extends BridgeAbstract
         $tagContents = json_decode($json, true);
 
         if (empty($tagContents['tagObjs'])) {
-            returnClientError('Topic not found: ' . $this->getInput('topic'));
+            throwClientException('Topic not found: ' . $this->getInput('topic'));
         }
 
         $this->feedName = $tagContents['tagObjs'][0]['name'];
@@ -215,7 +215,7 @@ EOD;
 
                 if ($media['type'] === 'YouTube') {
                     $div->outertext = <<<EOD
-	<iframe src="https://www.youtube.com/embed/{$media['externalId']}" width="560" height="315">
+	<iframe src="https://www.youtube.com/embed/{$media['externalId']}" width="560" height="315" referrerpolicy="strict-origin">
 	</iframe>
 EOD;
                 }
@@ -251,7 +251,7 @@ EOD;
         if ($video['type'] === 'YouTube') {
             $url = 'https://www.youtube.com/embed/' . $video['externalId'];
             $html = <<<EOD
-<iframe width="560" height="315" src="{$url}" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="{$url}" frameborder="0" allowfullscreen referrerpolicy="strict-origin"></iframe>
 EOD;
         } else {
             $html = <<<EOD

@@ -65,7 +65,7 @@ class RutubeBridge extends BridgeAbstract
     private function getJSONData($html)
     {
         $jsonDataRegex = '/window.reduxState = (.*);/';
-        preg_match($jsonDataRegex, $html, $matches) or returnServerError('Could not find reduxState');
+        preg_match($jsonDataRegex, $html, $matches) or throwServerException('Could not find reduxState');
         $map = [
             '\x26' => '&',
             '\x3c' => '<',
@@ -85,7 +85,7 @@ class RutubeBridge extends BridgeAbstract
         $reduxState = $this->getJSONData($html);
         $videos = [];
         if ($this->getInput('c')) {
-            $videosMethod = 'videos(' . $this->getInput('c') . ')';
+            $videosMethod = 'allVideos(' . $this->getInput('c') . ',)';
             $channelInfoMethod = 'channelInfo({"userChannelId":' . $this->getInput('c') . '})';
             $videos = $reduxState->api->queries->$videosMethod->data->results;
             $this->title = $reduxState->api->queries->$channelInfoMethod->data->name;

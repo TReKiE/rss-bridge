@@ -2,9 +2,9 @@
 
 class YouTubeCommunityTabBridge extends BridgeAbstract
 {
-    const NAME = 'YouTube Community Tab Bridge';
+    const NAME = 'YouTube Posts Tab Bridge';
     const URI = 'https://www.youtube.com';
-    const DESCRIPTION = 'Returns posts from a channel\'s community tab';
+    const DESCRIPTION = 'Returns posts from a channel\'s posts tab';
     const MAINTAINER = 'VerifiedJoseph';
     const PARAMETERS = [
         'By channel ID' => [
@@ -31,7 +31,7 @@ class YouTubeCommunityTabBridge extends BridgeAbstract
     private $feedName = '';
     private $itemTitle = '';
 
-    private $urlRegex = '/youtube\.com\/(channel|user|c)\/([\w]+)\/community/';
+    private $urlRegex = '/youtube\.com\/(channel|user|c)\/([\w]+)\/posts/';
     private $jsonRegex = '/var ytInitialData = ([^<]*);<\/script>/';
 
     public function detectParameters($url)
@@ -59,26 +59,30 @@ class YouTubeCommunityTabBridge extends BridgeAbstract
     {
         if (is_null($this->getInput('username')) === false) {
             try {
-                $this->feedUrl = $this->buildCommunityUri($this->getInput('username'), 'c');
+                $this->feedUrl = $this->buildPostsUri($this->getInput('username'), 'c');
                 $html = getSimpleHTMLDOM($this->feedUrl);
             } catch (Exception $e) {
-                $this->feedUrl = $this->buildCommunityUri($this->getInput('username'), 'user');
+                $this->feedUrl = $this->buildPostsUri($this->getInput('username'), 'user');
                 $html = getSimpleHTMLDOM($this->feedUrl);
             }
         } else {
-            $this->feedUrl = $this->buildCommunityUri($this->getInput('channel'), 'channel');
+            $this->feedUrl = $this->buildPostsUri($this->getInput('channel'), 'channel');
             $html = getSimpleHTMLDOM($this->feedUrl);
         }
 
         $json = $this->extractJson($html->find('html', 0)->innertext);
 
-        $this->feedName = $json->header->c4TabbedHeaderRenderer->title;
+        $this->feedName = $json->header->c4TabbedHeaderRenderer->title ?? null;
+        $this->feedName ??= $json->header->pageHeaderRenderer->pageTitle ?? null;
+        $this->feedName ??= $json->metadata->channelMetadataRenderer->title ?? null;
+        $this->feedName ??= $json->microformat->microformatDataRenderer->title ?? null;
+        $this->feedName ??= '';
 
-        if ($this->hasCommunityTab($json) === false) {
-            returnServerError('Channel does not have a community tab');
+        if ($this->hasPostsTab($json) === false) {
+            throwServerException('Channel does not have a posts tab');
         }
 
-        $posts = $this->getCommunityPosts($json);
+        $posts = $this->getPosts($json);
         foreach ($posts as $key => $post) {
             $this->itemTitle = '';
 
@@ -132,18 +136,18 @@ class YouTubeCommunityTabBridge extends BridgeAbstract
     public function getName()
     {
         if (!empty($this->feedName)) {
-            return $this->feedName . ' - YouTube Community Tab';
+            return $this->feedName . ' - YouTube Posts Tab';
         }
 
         return parent::getName();
     }
 
     /**
-     * Build Community URI
+     * Build Posts URI
      */
-    private function buildCommunityUri($value, $type)
+    private function buildPostsUri($value, $type)
     {
-        return self::URI . '/' . $type . '/' . $value . '/community';
+        return self::URI . '/' . $type . '/' . $value . '/posts';
     }
 
     /**
@@ -152,27 +156,27 @@ class YouTubeCommunityTabBridge extends BridgeAbstract
     private function extractJson($html)
     {
         if (!preg_match($this->jsonRegex, $html, $parts)) {
-            returnServerError('Failed to extract data from page');
+            throwServerException('Failed to extract data from page');
         }
 
         $data = json_decode($parts[1]);
 
         if ($data === false) {
-            returnServerError('Failed to decode extracted data');
+            throwServerException('Failed to decode extracted data');
         }
 
         return $data;
     }
 
     /**
-     * Check if channel has a community tab
+     * Check if channel has a posts tab
      */
-    private function hasCommunityTab($json)
+    private function hasPostsTab($json)
     {
         foreach ($json->contents->twoColumnBrowseResultsRenderer->tabs as $tab) {
             if (
                 isset($tab->tabRenderer)
-                && str_ends_with($tab->tabRenderer->endpoint->commandMetadata->webCommandMetadata->url, 'community')
+                && str_ends_with($tab->tabRenderer->endpoint->commandMetadata->webCommandMetadata->url, 'posts')
             ) {
                 return true;
             }
@@ -182,14 +186,14 @@ class YouTubeCommunityTabBridge extends BridgeAbstract
     }
 
     /**
-     * Get community tab posts
+     * Get posts from posts tab
      */
-    private function getCommunityPosts($json)
+    private function getPosts($json)
     {
         foreach ($json->contents->twoColumnBrowseResultsRenderer->tabs as $tab) {
             if (
                 isset($tab->tabRenderer)
-                && str_ends_with($tab->tabRenderer->endpoint->commandMetadata->webCommandMetadata->url, 'community')
+                && str_ends_with($tab->tabRenderer->endpoint->commandMetadata->webCommandMetadata->url, 'posts')
             ) {
                 return $tab->tabRenderer->content->sectionListRenderer->contents[0]->itemSectionRenderer->contents;
             }
@@ -236,7 +240,7 @@ class YouTubeCommunityTabBridge extends BridgeAbstract
 
                 $content = <<<EOD
 <iframe width="100%" height="410" src="https://www.youtube.com/embed/{$attachments->videoRenderer->videoId}" 
-frameborder="0" allow="encrypted-media;" allowfullscreen></iframe>
+frameborder="0" allow="encrypted-media;" allowfullscreen referrerpolicy="strict-origin"></iframe>
 EOD;
             } elseif (isset($attachments->backstageImageRenderer)) {
                 // Image

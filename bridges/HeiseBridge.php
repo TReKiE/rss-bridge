@@ -136,8 +136,20 @@ class HeiseBridge extends FeedExpander
         if (strpos($item['uri'], 'https://www.heise.de') !== 0) {
             return $item;
         }
+
+        // These cause memory leaks in simple_html_dom
+        $skipped = [
+            'https://www.heise.de/bestenlisten/testsieger/top-10-der-beste-mini-pc-mit-windows-11-im-test-amd-ryzen-dominiert/6cybv8w',
+            'https://www.heise.de/bestenlisten/testsieger/top-10-der-beste-maehroboter-ohne-begrenzungskabel-mit-kamera-gps-oder-lidar/gb7xhbg',
+        ];
+        if (in_array($item['uri'], $skipped)) {
+            $this->logger->debug(sprintf('skip: %s', $item['uri']));
+            return $item;
+        }
+
         // abort on heise+ articles
         if ($sessioncookie == '' && str_starts_with($item['title'], 'heise+ |')) {
+            $item['uri'] = 'https://archive.is/' . $item['uri'];
             return $item;
         }
 
@@ -151,6 +163,11 @@ class HeiseBridge extends FeedExpander
             $item = $this->addArticleToItem($item, $article);
         }
 
+        $article->clear();
+
+        // Manually trigger gc to reduce memory usage
+        gc_collect_cycles();
+
         return $item;
     }
 
@@ -161,8 +178,8 @@ class HeiseBridge extends FeedExpander
 
         // remove unwanted stuff
         foreach (
-            $article->find('figure.branding, figure.a-inline-image, a-ad, div.ho-text, a-img,
-            .a-toc__list, a-collapse, .opt-in__description, .opt-in__footnote') as $element
+            $article->find('figure.branding, figure.a-inline-image, a-ad, div.ho-text, a-img, .opt-in__title,
+            .a-toc__list, a-collapse, .opt-in__description, .opt-in__footnote, .opt-in__bg-image, .notice-banner__text, .notice-banner__link, .ad, .ad--inread') as $element
         ) {
             $element->remove();
         }
@@ -196,7 +213,7 @@ class HeiseBridge extends FeedExpander
                 $ytiframe = <<<EOT
                     <iframe width="560" height="315" src="https://$link[0] title="YouTube video player" frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    referrerpolicy="strict-origin" allowfullscreen></iframe>
                 EOT;
                 //check if video is in header or article for correct possitioning
                 if (strpos($header->innertext, $link[0])) {
