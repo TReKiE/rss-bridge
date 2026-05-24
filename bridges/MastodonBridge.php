@@ -202,7 +202,7 @@ class MastodonBridge extends BridgeAbstract
             ) {
                 $item['content'] = $item['content'] . '<br /><img ';
                 if (isset($attachment['name'])) {
-                    $item['content'] .= sprintf('alt="%s" ', $attachment['name']);
+                    $item['content'] .= sprintf('alt="%s" ', $this->sanitizeXML($attachment['name']));
                 }
                 $item['content'] .= sprintf('src="%s" />', $attachment['url']);
             }
@@ -297,5 +297,14 @@ class MastodonBridge extends BridgeAbstract
         } catch (\JsonException $e) {
             return null;
         }
+    }
+    private function sanitizeXML($string)
+    {
+        if ($string === null) {
+            return '';
+        }
+
+         // Remove invalid XML chars
+        return preg_replace('/[^\x09\x0A\x0D\x20-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $string);
     }
 }
