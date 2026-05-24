@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 class MastodonBridge extends BridgeAbstract
 {
     // This script attempts to imitiate the behaviour of a read-only ActivityPub server
